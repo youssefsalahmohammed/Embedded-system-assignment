@@ -1,0 +1,79 @@
+// suppose array start at address 0x40
+address EQU 0x40
+subcounter EQU 0H
+arrayLen EQU 50H
+tempAddr EQU 0H
+counter EQU 50H
+and_var EQU 1H
+-----------------
+
+LFSR0, address
+LFSR1, address
+INCF, FSR1L, F
+
+
+loop: 
+MOVFF, arrayLen, subcounter
+DECF subcounter, f
+
+// if arraylen == 0 exit else continue
+MOVLW 0
+CPFSEQ arrayLen
+GOTO loop2
+GOTO even_odd_store
+
+loop2:
+MOVF, INDF1, W
+CPFSGT, INDF0
+GOTO continue
+
+swap:
+MOVF, INDF0, W
+MOVFF, INDF1, INDF0
+MOVWF, INDF1
+
+continue:
+DECF, subcounter
+BZ, before_loop1
+INCF FSR1L, f
+GOTO loop2
+
+before_loop1:
+DECF, arrayLen
+INCF FSR0L, f
+MOVFF, LFSR0, tempAddr
+LFSR1, tempAddr
+INCF FSR1L, f
+GOTO loop
+
+even_odd_store:
+LSRF0, 340H
+LSRF1, 440H
+LSFR2, address
+
+test_even_odd:
+MOVF, INDF2, w
+ANDWF, and_var, w
+BZ, store_even
+
+store_odd:
+MOVF, INDF2, w
+MOVWF, INDF0
+INCF, FSR0L, f
+INCF, FSR2L, f
+DECF, counter, f
+BZ,EXIT
+GOTO test_even_odd
+
+store_even:
+MOVF, INDF2, w
+MOVWF, INDF1
+INCF, FSR1L, f
+INCF, FSR2L, f
+DECF, counter, f
+BZ,EXIT
+GOTO test_even_odd
+
+EXIT:
+end
+
